@@ -2,7 +2,7 @@ function [serpentine_res,strain_array] = mech2resadjstrain(num_beams,num_segs, p
 %inputs num_beams = half the number of beams (symm), num_segs, prestrain,disp_int,tar_disp
 
 tic
-strain_array = [0:strain_int:1.8*prestrain];
+strain_array = [0:strain_int:1.6*prestrain];
 
 [EI, a, b, w, Rs, Rl, rho_c, q_eff, xi_int, xi_array]= beam_properties(num_segs);
 
@@ -31,11 +31,11 @@ end
 function [EI, a, b, w, Rs, Rl, rho_c, q_eff, xi_int, xi_array]= beam_properties(num_segs)
 %Beam properties and dimensions
 t = 140e-6; %beam thickness
-w = 195e-6; %beam width
+w = 192.5e-6; %beam width
 E = 200e9; %Young's modulus
 EI = E*(t*w^3)./12;
-a = 5e-6; %Length of short part of meander
-b = 19.8e-3; %Length of long part of meander
+a = 7.5e-6*3; %Length of short part of meander
+b = 19.8e-3/1; %Length of long part of meander
 
 k_eff = (2500); %Spring constant of one gap section of the substrate (need to measure)
 q_eff = k_eff/b;
@@ -46,9 +46,9 @@ xi_int = b/num_segs; %Length of ea  ch segment
 xi_array = [0:xi_int:b]; %Location of each segment (base is 0, tip is b)
 
 %%%%% Electrical properties %%%%%
-rho_90 = 7.17e-5;
-rho_0 = rho_90/4;
-rho_c = 1e5*rho_0*a/(t*xi_int); %fitted parameter
+rho_90 = 75e-6;
+rho_0 = rho_90/3.75;
+rho_c = 7.2*num_segs; %fitted parameter
 Rs = rho_0*a/(w*t);
 Rl = rho_90*b/(w*t);
 
