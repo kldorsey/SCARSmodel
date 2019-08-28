@@ -69,13 +69,9 @@ for beam_num = 1:num_beams
     subs_disp = sum(eq_pos(beam_num:end)-beam_ledge_tip(beam_num:end))/(num_beams+1-beam_num);
     
     %Find displacement to left (closer to symmetry) neighboring beam
-    if beam_num == 1
-        %Disp to line of symmetry
-        gapLR = -a/2;
-    else
-        %Distance between beams
-        gapLR = -a; 
-    end
+    
+        gapLR = -a/2; 
+    
     
     if gapLR > subs_disp 
         %If displacement to previous beam is |smaller| than displacement to eq_pos AND disp to eq_pos is negative
