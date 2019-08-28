@@ -5,6 +5,8 @@ mech2res_num is a numerical solution that takes the serpentine geometry and amou
 
 mech2res_closed uses a closed form solution to find the displacement of each beam by first assuming the displacement of the beam's tip is either the displacement to its next neighbor (displacement of gap -a) or the displacement that minimizes the energy stored in the substrate for all following (right neighbor +) beams. The function then finds the "effective length" of the beam that causes the minimum energy displacement at the end of the effective length. The remaining length of the beam beyond the effective length is assumed to mirror the previous (left neighbor) beam and has no stored beam strain energy.
 
+Within the mech2res_closed function, the code may be changed to solve for a constant distributed force along the beam (dU_vec_dist) or a point force at the end of the beam (dU_vec_point). 
+
 Each mech2res* can use the same area to resistance length function to find the total network resistance. This function takes in the overlap length of each beam and uses it to solve for the contact resistance between each beam as well as the total resistance of the serpentine. 
 
 Area_to_res_length function takes the effective length of each beam into account when calculating "Rs" and "Rl" but otherwise finds the same quantites
