@@ -1,4 +1,4 @@
-function [serpentine_res,strain_array] = mech2resadjstrain(num_beams,num_segs, prestrain,strain_int)
+function [serpentine_res,strain_array] = mech2res_num(num_beams,num_segs, prestrain,strain_int)
 %inputs num_beams = half the number of beams (symm), num_segs, prestrain,disp_int,tar_disp
 
 strain_array = [0:strain_int:1.6*prestrain];
