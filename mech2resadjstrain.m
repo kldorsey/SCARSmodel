@@ -1,56 +1,56 @@
 function [serpentine_res,strain_array] = mech2resadjstrain(num_beams,num_segs, prestrain,strain_int)
 %inputs num_beams = half the number of beams (symm), num_segs, prestrain,disp_int,tar_disp
 
-tic
 strain_array = [0:strain_int:1.6*prestrain];
 
-[EI, a, b, w, Rs, Rl, rho_c, q_eff, xi_int, xi_array]= beam_properties(num_segs);
+[EI, a, b, w, Rs, Rl, Rc, q_eff, xi_int, xi_array]= beam_properties(num_segs);
 
 [beam_ledge,norm_disp] = make_disp_arrays(a,w,EI,xi_array,num_beams);
 prestrain_pos = beam_ledge;
 
 serpentine_res = zeros(1,length(strain_array));
 
-for strain_count = 1:length(strain_array)
-    currstrain = strain_array(strain_count);
-    
-    %Find position of all beams once displacement equilibrium is reached
-    eq_pos = prestrain_pos.*((100+currstrain)/(100+prestrain)); %Position of zero energy stored in substrate
-    
-    [beam_ledge,~] = find_Umin_wstrain(EI,q_eff,xi_int,w,num_beams,xi_array,eq_pos,prestrain_pos,norm_disp);
-    
-    %beam_plot(beam_ledge,strain_count,strain_int,b,xi_array,num_beams,w,a);
-    contact_area = calc_contact_area(w,beam_ledge,num_beams,xi_array);
-    serpentine_res(strain_count) = area_to_resistance(num_beams,Rs,Rl,rho_c,contact_area);
-end
-toc
+    for strain_count = 1:length(strain_array)
+        currstrain = strain_array(strain_count);
+
+        %Find position of all beams once displacement equilibrium is reached
+        
+        
+        eq_pos = prestrain_pos.*((100+currstrain)/(100+prestrain)); %Position of zero energy stored in substrate
+
+        [~,L_eff] = find_Umin_wstrain(EI,q_eff,xi_int,w,num_beams,b,xi_array,eq_pos,prestrain_pos,norm_disp);
+        
+        %beam_plot(beam_ledge,strain_count,strain_int,b,xi_array,num_beams,w,a);
+        serpentine_res(strain_count) = area_to_resistance(num_beams,b,Rs,Rl,Rc,L_eff);
+    end
+
 plot(strain_array,serpentine_res,'o')
 end
 
 
-function [EI, a, b, w, Rs, Rl, rho_c, q_eff, xi_int, xi_array]= beam_properties(num_segs)
+function [EI, a, b, w, Rs, Rl, Rc, q_eff, xi_int, xi_array]= beam_properties(num_segs)
 %Beam properties and dimensions
+a = 7.5e-6; %Length of short part of meander
 t = 140e-6; %beam thickness
-w = 192.5e-6; %beam width
+w = 200e-6-a; %beam width
 E = 200e9; %Young's modulus
 EI = E*(t*w^3)./12;
-a = 7.5e-6*3; %Length of short part of meander
-b = 19.8e-3/1; %Length of long part of meander
 
-k_eff = (2500); %Spring constant of one gap section of the substrate (need to measure)
+b = 10e-3-w; %Length of long part of meander
+
+k_eff = (5000); %Spring constant of one gap section of the substrate
 q_eff = k_eff/b;
 
 %%%%% Beam setup variables %%%%%
-%num_segs = 9; %# of segments in each beam
-xi_int = b/num_segs; %Length of ea  ch segment
+xi_int = b/num_segs; %Length of each segment
 xi_array = [0:xi_int:b]; %Location of each segment (base is 0, tip is b)
 
 %%%%% Electrical properties %%%%%
 rho_90 = 75e-6;
 rho_0 = rho_90/3.75;
-rho_c = 7.2*num_segs; %fitted parameter
-Rs = rho_0*a/(w*t);
-Rl = rho_90*b/(w*t);
+Rc = 5*10e-3; %fitted parameter
+Rs = rho_0*(a+w)/(w*t);
+Rl = rho_90*(b+w)/(w*t);
 
 end
 
@@ -74,12 +74,11 @@ norm_disp(length(xi_array):length(xi_array)+floor(1/norm_disp_interval),:) = [1:
 norm_disp(length(xi_array)+floor(1/norm_disp_interval)+1:length(xi_array)+2*floor(1/norm_disp_interval),:) = -1*[norm_disp_interval:norm_disp_interval:1]'*norm_disp(length(xi_array)-1,:);
 end
 
-function [beam_ledge,overlap] = find_Umin_wstrain(EI,q_eff,xi_int,w,num_beams,xi_array,eq_pos,beam_ledge,norm_disp)
+function [beam_ledge,L_eff] = find_Umin_wstrain(EI,q_eff,xi_int,w,num_beams,b,xi_array,eq_pos,beam_ledge,norm_disp)
 
-overlap = zeros(num_beams,length(xi_array));
+L_eff=b-1e-9*ones(1,num_beams);
 
 for beam_num = 1:num_beams
-    
     %%%%%  Calculate the initial moment and displacement of each beam by finding minimum energy  %%%%%
     if beam_num == 1
         beam_redge = zeros(1,length(xi_array)); %Right edge is at symm for 1st beam
@@ -106,8 +105,11 @@ for beam_num = 1:num_beams
     
     [~,U_min_index]=min(U_strain+U_subs); %Find guess_disp that yields min energy
     
+    if U_min_index <= length(xi_array)
+        L_eff(beam_num) = xi_array(U_min_index);
+    end
+    
     %%%Update beam position based on which beam position gives min energy
-    overlap(beam_num,:) = -1*min(beam_ledge(beam_num,:)-beam_redge,0);
     new_beam_ledge = max(beam_ledge(beam_num,:)+guess_disp(U_min_index,:),beam_redge);
     
     delta_disp = new_beam_ledge(end) - beam_ledge(beam_num,end); %Actual change in displacement with beam contact condition applied
@@ -141,20 +143,3 @@ for beam_num = 1:num_beams
 end
 end
 
-function contact_area = calc_contact_area(w, beam_ledge,num_beams,xi_array)
-contact_area = zeros(1,num_beams);
-for beam_num = 1:num_beams
-    if beam_num == 1
-        beam_redge = zeros(1,length(xi_array));
-    else
-        beam_redge = fliplr(beam_ledge(beam_num-1,:))+w;
-    end
-    for xi = 1:length(xi_array)
-        if beam_ledge(beam_num,xi) <= beam_redge(xi)
-            contact_area(beam_num) = contact_area(beam_num) + 1;
-        end
-    end       
-end
-end
-
-    
