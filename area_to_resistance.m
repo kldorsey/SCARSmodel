@@ -6,19 +6,24 @@ function serpentine_res = area_to_resistance(num_beams,b,Rs,Rl,Rc,L_eff)
     contact_length = b-L_eff; %find contact length between beams
     num_meanders = num_beams; %Mirror the serpentine
     
+    Rc_int = 10e-6;
+    
     for beams = 1:num_beams
-        Rc_int = 100e-6;
-        num_ints = floor(contact_length(beams)/Rc_int);
+        if contact_length(beams) > 0 
+            num_ints = floor(contact_length(beams)/Rc_int);
 
-        Rcp = Rc/Rc_int;
-        Rlp = Rl*b/Rc_int;
+            Rcp = Rc/Rc_int;
+            Rlp = Rl*b/Rc_int;
 
-        Reff = 1e6;
+            Reff = Rcp;
 
-        for interval = 1:num_ints
-            Reff = 1/((1/Reff)+(1/(2*Rlp+Rcp)));
+            for interval = 1:num_ints
+                Reff = 1/((1/Reff)+(1/(2*Rlp+Rcp)));
+            end
+        else
+            Reff = 1e4; 
         end
-        R_eff(beams) = Reff;
+            R_eff(beams) = Reff;
     end
     
     contact_res = [fliplr(R_eff(2:num_beams)) R_eff(1) R_eff(2:num_beams)]; %Mirror the effective length matrix
