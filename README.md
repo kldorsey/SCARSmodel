@@ -7,6 +7,5 @@ mech2res_closed uses a closed form solution to find the displacement of each bea
 
 Within the mech2res_closed function, the code may be changed to solve for a constant distributed force along the beam (dU_vec_dist) or a point force at the end of the beam (dU_vec_point). 
 
-Each mech2res* can use the same area to resistance length function to find the total network resistance. This function takes in the overlap length of each beam and uses it to solve for the contact resistance between each beam as well as the total resistance of the serpentine. 
+Each mech2res* uses the same area_to_resistance function to find the total network resistance. This function takes in the contact length of each beam and uses it to solve for the contact resistance between each beam as well as the total resistance of the serpentine. 
 
-Area_to_res_length function takes the effective length of each beam into account when calculating "Rs" and "Rl" but otherwise finds the same quantites
