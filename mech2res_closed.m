@@ -1,4 +1,4 @@
-function [serpentine_res,stretch_array] = mech2resclosed(num_beams,prestretch,stretch_int)
+function [serpentine_res,stretch_array] = mech2res_closed(num_beams,prestretch,stretch_int)
 %inputs num_beams = half the number of beams (symm), num_segs, prestrain,disp_int,tar_disp
 
 stretch_array = [1:stretch_int:1.02*prestretch];
